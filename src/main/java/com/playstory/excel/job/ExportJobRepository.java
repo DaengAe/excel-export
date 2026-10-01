@@ -74,8 +74,13 @@ public class ExportJobRepository {
         return jdbcTemplate.query("SELECT * FROM export_jobs WHERE status='DONE'", mapper);
     }
 
-    public List<ExportJob> findProcessingWithFinalPath() {
-        return jdbcTemplate.query("SELECT * FROM export_jobs WHERE status='PROCESSING' AND logical_file_path IS NOT NULL", mapper);
+    public List<ExportJob> findProcessing() {
+        return jdbcTemplate.query("SELECT * FROM export_jobs WHERE status='PROCESSING'", mapper);
+    }
+
+    /** Repairs the file-moved / DB-not-yet-marked-DONE boundary after a restart. */
+    public void markDoneFromReconcile(UUID id, String logicalFilePath) {
+        jdbcTemplate.update("UPDATE export_jobs SET status='DONE', finished_at=now(), lease_until=NULL, logical_file_path=?, error_code=NULL, error_message=NULL WHERE id=? AND status='PROCESSING'", logicalFilePath, id);
     }
 
     public void markFailedFromReconcile(UUID id, String code, String message) {

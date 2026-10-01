@@ -4,6 +4,7 @@ import com.playstory.excel.config.ExportProperties;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 import java.util.zip.ZipFile;
@@ -29,7 +30,12 @@ public class ExportFileStore {
     public String logicalPath(UUID jobId) { return "exports/" + jobId + ".xlsx"; }
 
     public Path moveToFinal(UUID jobId) throws IOException {
-        return Files.move(temporaryPath(jobId), finalPath(jobId), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        try {
+            return Files.move(temporaryPath(jobId), finalPath(jobId), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        } catch (AtomicMoveNotSupportedException exception) {
+            // The Docker named volume is normally one filesystem. This fallback keeps local execution portable.
+            return Files.move(temporaryPath(jobId), finalPath(jobId), StandardCopyOption.REPLACE_EXISTING);
+        }
     }
 
     public boolean isValidFinalFile(UUID jobId) {

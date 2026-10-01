@@ -33,6 +33,7 @@ public class ExportJobWorker {
 
     @Scheduled(fixedDelayString = "${app.export.worker-delay-ms:1000}")
     public void processOne() {
+        reconcileProcessingFiles();
         repository.requeueExpiredProcessing();
         Optional<ExportJob> claimed = repository.claimOne(properties.leaseMinutes());
         claimed.ifPresent(this::generate);
@@ -58,8 +59,18 @@ public class ExportJobWorker {
         repository.findDone().stream()
                 .filter(job -> !fileStore.isValidFinalFile(job.id()))
                 .forEach(job -> repository.markFailedFromReconcile(job.id(), "FILE_MISSING_OR_CORRUPT", "Completed file is unavailable."));
+        reconcileProcessingFiles();
         int requeued = repository.requeueExpiredProcessing();
         if (requeued > 0) log.info("requeued expired export jobs: count={}", requeued);
+    }
+
+    private void reconcileProcessingFiles() {
+        repository.findProcessing().stream()
+                .filter(job -> fileStore.isValidFinalFile(job.id()))
+                .forEach(job -> {
+                    repository.markDoneFromReconcile(job.id(), fileStore.logicalPath(job.id()));
+                    log.info("reconciled completed export file: jobId={}", job.id());
+                });
     }
 
     private String classify(Exception exception) {
