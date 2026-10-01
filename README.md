@@ -1,6 +1,6 @@
 # 비동기 Excel Export
 
-10만 건 주문 데이터를 요청 흐름과 분리해 XLSX 파일로 생성하는 Playstory 사전 과제입니다.
+10만 건 주문 데이터를 요청 흐름과 분리해 XLSX 파일로 생성하는 Playstory 사전 과제입니다. 자동 시드 데이터는 과제 명세의 `id`, `user_name`, `product_name`, `category`, `amount`, `status`, `order_date` 컬럼을 사용합니다.
 
 ## 실행
 

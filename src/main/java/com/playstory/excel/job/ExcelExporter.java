@@ -34,13 +34,15 @@ public class ExcelExporter {
             var sheet = workbook.createSheet("orders");
             Row header = sheet.createRow(0);
             header.createCell(0).setCellValue("ID");
-            header.createCell(1).setCellValue("CUSTOMER_NAME");
-            header.createCell(2).setCellValue("EMAIL");
-            header.createCell(3).setCellValue("AMOUNT");
-            header.createCell(4).setCellValue("ORDERED_AT");
+            header.createCell(1).setCellValue("USER_NAME");
+            header.createCell(2).setCellValue("PRODUCT_NAME");
+            header.createCell(3).setCellValue("CATEGORY");
+            header.createCell(4).setCellValue("AMOUNT");
+            header.createCell(5).setCellValue("STATUS");
+            header.createCell(6).setCellValue("ORDER_DATE");
 
             transactionTemplate.executeWithoutResult(status -> jdbcTemplate.query(connection -> {
-                PreparedStatement statement = connection.prepareStatement("SELECT id, customer_name, email, amount, ordered_at FROM order_data ORDER BY id");
+                PreparedStatement statement = connection.prepareStatement("SELECT id, user_name, product_name, category, amount, status, order_date FROM order_data ORDER BY id");
                 statement.setFetchSize(properties.fetchSize());
                 statement.setQueryTimeout(120);
                 return statement;
@@ -48,11 +50,13 @@ public class ExcelExporter {
                 long index = rows.incrementAndGet();
                 Row row = sheet.createRow((int) index);
                 row.createCell(0).setCellValue(resultSet.getLong("id"));
-                row.createCell(1).setCellValue(resultSet.getString("customer_name"));
-                row.createCell(2).setCellValue(resultSet.getString("email"));
-                row.createCell(3).setCellValue(resultSet.getBigDecimal("amount").doubleValue());
-                OffsetDateTime orderedAt = resultSet.getObject("ordered_at", OffsetDateTime.class);
-                row.createCell(4).setCellValue(orderedAt.toString());
+                row.createCell(1).setCellValue(resultSet.getString("user_name"));
+                row.createCell(2).setCellValue(resultSet.getString("product_name"));
+                row.createCell(3).setCellValue(resultSet.getString("category"));
+                row.createCell(4).setCellValue(resultSet.getInt("amount"));
+                row.createCell(5).setCellValue(resultSet.getString("status"));
+                OffsetDateTime orderDate = resultSet.getObject("order_date", OffsetDateTime.class);
+                row.createCell(6).setCellValue(orderDate.toString());
             }));
             try (var output = Files.newOutputStream(target)) { workbook.write(output); }
             return rows.get();
