@@ -134,8 +134,16 @@ Docker base image에는 태그뿐 아니라 multi-architecture manifest digest�
 - backend Docker build 중 단위 테스트 통과
 - Flyway migration 2개와 주문 데이터 100,000건 생성 확인
 - API 요청은 `202 Accepted`로 즉시 응답
+- 완료된 4개 job의 `시작 시각 → 완료 시각` 기준 생성 시간은 **14초, 12초, 11초, 7초**, 평균 **11.0초**
+- 측정 조건: 단일 backend 컨테이너(CPU 0.5, 메모리 1GB), PostgreSQL·named volume을 포함한 로컬 Docker Compose 환경, 100,000행 XLSX 생성
 - 100,000행 생성 job이 `done`으로 전이하고 XLSX 다운로드 `200 OK` 확인
 - 내려받은 XLSX는 헤더 포함 **100,001행**, 파일 크기 **3,884,470 bytes**
+
+<!-- 스크린샷을 GitHub README 편집 화면에 업로드한 뒤, 아래 주석을 실제 이미지 Markdown으로 교체합니다.
+![여러 엑셀 생성 job의 대기·생성·완료 상태와 다운로드 링크](PASTE_GITHUB_USER_ATTACHMENT_URL_HERE)
+-->
+
+> 여러 job을 동시에 요청했을 때 `pending`, `processing`, `done` 상태가 목록에 함께 표시되고, 완료 job에만 다운로드 링크가 활성화되는 화면을 이 위치에 첨부합니다.
 
 ## 후속 개선 방향
 
