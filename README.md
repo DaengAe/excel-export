@@ -117,7 +117,7 @@ POST 요청
 | **Spring Boot + Java 21** | FastAPI | JDBC transaction, scheduler, 오류 처리와 테스트 구조를 명시적으로 보여 주기 좋고, Java backend 경험을 직접 설명할 수 있다. | JVM 메모리 부담이 있어 streaming과 단일 worker로 제어한다. |
 | **PostgreSQL** | MySQL, SQLite | `generate_series`, `FOR UPDATE SKIP LOCKED`, `RETURNING`으로 10만 건 시드와 job 원자 선점을 간결하게 구현할 수 있다. | 별도 DB 컨테이너가 필요하다. |
 | **DB job queue + 단일 scheduled worker** | 요청 thread에서 생성, `@Async`, Spring Batch, Kafka/RabbitMQ | 요청과 대용량 생성을 분리하면서 상태·실패·재시작 복구를 DB에 남긴다. 외부 서비스 없이 단일 backend 제약에 맞는다. | polling 지연과 대기열이 생길 수 있다. job 유형·처리량이 커지면 Spring Batch 또는 worker 분리를 검토한다. |
-| **JDBC cursor + Apache POI SXSSF** | JPA `findAll`, 일반 `XSSFWorkbook`, CSV | 모든 행을 heap에 적재하지 않고 일정 행 window만 유지해 1GB 제약에서 XLSX를 생성한다. | JPA보다 구현이 길고 JDBC fetch size·transaction을 이해해야 한다. |
+| **JDBC cursor + Apache POI SXSSF** | JPA `findAll`, 일반 `XSSFWorkbook`, CSV | 모든 행을 heap에 적재하지 않고 일정 행 window만 유지해 1GB 제약에서 XLSX를 생성한다. | 단순한 JPA `findAll()`보다 구현량이 늘어난다. 대용량 JPA streaming도 가능하지만 transaction 유지·fetch size·영속성 컨텍스트 관리를 별도로 설계해야 한다. |
 | **2초 polling** | 수동 새로고침, SSE | 목록 API를 재사용해 구현과 재연결 처리가 단순하다. | 완료 반영이 최대 2초 늦다. 실시간 요구가 커지면 SSE를 도입한다. |
 | **로컬 named volume** | S3 등 객체 스토리지 | 외부 계정·서비스 없이 Compose만으로 완결된다. | 다중 인스턴스·장기 보존에는 맞지 않아 객체 스토리지와 lifecycle 정책으로 확장한다. |
 
