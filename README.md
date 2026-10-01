@@ -69,6 +69,33 @@ flowchart LR
 - `postgres`: 주문 데이터와 job 상태를 함께 저장한다.
 - `exports_data`: 생성 XLSX를 backend 재시작 뒤에도 유지한다.
 
+## 패키지 구조
+
+과제의 단일 `ExportJob` 도메인에 맞춰, 전체 계층을 과도하게 늘리지 않은 경량 Hexagonal 구조를 적용한다.
+
+```text
+com.playstory.excel
+├── config
+└── export
+    ├── domain
+    │   └── ExportJob, JobStatus
+    ├── application
+    │   └── ExportJobProcessor
+    │       # 상태 전이·파일 정합성 보정·실패 처리 흐름 조율
+    ├── port
+    │   ├── ExportJobStore
+    │   ├── ExcelFileExporter
+    │   └── ExportFileStorage
+    ├── infrastructure
+    │   ├── persistence/JdbcExportJobRepository
+    │   ├── file/JdbcStreamingExcelExporter, LocalExportFileStorage
+    │   └── scheduling/ExportJobPollingScheduler
+    └── presentation
+        └── ExportJobController, ExportJobResponse, ApiExceptionHandler
+```
+
+`application`은 domain과 port에만 의존한다. Spring scheduler·설정값·로그는 `infrastructure.scheduling` adapter로 분리하고, API 응답은 `presentation`의 `ExportJobResponse` DTO로 변환한다. PostgreSQL/JDBC, Apache POI, 로컬 파일시스템 구현은 `infrastructure`에 격리한다.
+
 ## 핵심 흐름과 상태 전이
 
 ```text
