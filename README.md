@@ -19,6 +19,12 @@ docker compose up --build
 
 Backend에는 CPU 0.5, memory 1GB 제한과 CPU 0.25, memory 512MB reservation을 Compose에 명시했습니다.
 
+## 버전 고정 원칙
+
+- Spring Boot parent는 `3.4.5`로 고정해 Spring framework·test starter의 호환 버전을 BOM으로 일괄 관리한다.
+- 직접 사용하는 Flyway core/PostgreSQL module은 `10.20.1`, PostgreSQL JDBC driver는 `42.7.13`, Apache POI는 `5.5.1`로 명시한다.
+- 모든 Docker base image는 정확한 태그와 multi-architecture manifest digest를 함께 고정한다. 따라서 같은 Dockerfile은 시간에 따라 다른 base image를 받지 않는다.
+
 ## 상태와 복구
 
 job 상태는 `pending`, `processing`, `done`, `failed`입니다. scheduler worker는 한 번에 하나의 `PENDING` job을 `FOR UPDATE SKIP LOCKED`로 선점합니다. PostgreSQL cursor streaming과 Apache POI `SXSSFWorkbook`으로 전체 10만 행을 메모리에 적재하지 않습니다.
