@@ -3,7 +3,7 @@ WORKDIR /workspace
 COPY pom.xml .
 RUN mvn -q -DskipTests dependency:go-offline
 COPY src src
-RUN mvn -q -DskipTests package
+RUN mvn -q test package
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app
