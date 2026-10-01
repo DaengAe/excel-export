@@ -1,9 +1,10 @@
-package com.playstory.excel.web;
+package com.playstory.excel.export.presentation;
 
-import com.playstory.excel.job.ExportFileStore;
-import com.playstory.excel.job.ExportJob;
-import com.playstory.excel.job.ExportJobRepository;
-import com.playstory.excel.job.JobStatus;
+import com.playstory.excel.export.domain.ExportJob;
+import com.playstory.excel.export.domain.JobStatus;
+import com.playstory.excel.export.port.ExportFileStorage;
+import com.playstory.excel.export.port.ExportFileUnavailableException;
+import com.playstory.excel.export.port.ExportJobStore;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -23,29 +24,29 @@ import org.springframework.web.server.ResponseStatusException;
 @RestController
 @RequestMapping("/api/export-jobs")
 public class ExportJobController {
-    private final ExportJobRepository repository;
-    private final ExportFileStore fileStore;
+    private final ExportJobStore jobStore;
+    private final ExportFileStorage fileStorage;
 
-    public ExportJobController(ExportJobRepository repository, ExportFileStore fileStore) {
-        this.repository = repository;
-        this.fileStore = fileStore;
+    public ExportJobController(ExportJobStore jobStore, ExportFileStorage fileStorage) {
+        this.jobStore = jobStore;
+        this.fileStorage = fileStorage;
     }
 
     @PostMapping
     public ResponseEntity<ExportJob> create() {
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(repository.create());
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(jobStore.create());
     }
 
     @GetMapping
-    public List<ExportJob> list() { return repository.findLatest(50); }
+    public List<ExportJob> list() { return jobStore.findLatest(50); }
 
     @GetMapping("/{id}/download")
     public ResponseEntity<FileSystemResource> download(@PathVariable UUID id) {
-        ExportJob job = repository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "JOB_NOT_FOUND"));
+        ExportJob job = jobStore.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "JOB_NOT_FOUND"));
         if (job.status() != JobStatus.DONE) throw new ResponseStatusException(HttpStatus.CONFLICT, "JOB_NOT_COMPLETED");
         Path path;
-        try { path = fileStore.requireFinalFile(id); }
-        catch (ExportFileStore.ExportFileUnavailableException exception) { throw new ResponseStatusException(HttpStatus.CONFLICT, "EXPORT_FILE_UNAVAILABLE"); }
+        try { path = fileStorage.requireFinalFile(id); }
+        catch (ExportFileUnavailableException exception) { throw new ResponseStatusException(HttpStatus.CONFLICT, "EXPORT_FILE_UNAVAILABLE"); }
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=export-" + id + ".xlsx")

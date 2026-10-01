@@ -1,4 +1,7 @@
-package com.playstory.excel.job;
+package com.playstory.excel.export.infrastructure.file;
+
+import com.playstory.excel.export.port.ExportFileStorage;
+import com.playstory.excel.export.port.ExportFileUnavailableException;
 
 import com.playstory.excel.config.ExportProperties;
 import java.io.IOException;
@@ -11,11 +14,11 @@ import java.util.zip.ZipFile;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ExportFileStore {
+public class LocalExportFileStorage implements ExportFileStorage {
     private final Path root;
     private final Path temporaryRoot;
 
-    public ExportFileStore(ExportProperties properties) {
+    public LocalExportFileStorage(ExportProperties properties) {
         this.root = properties.directory();
         this.temporaryRoot = root.resolve(".tmp");
     }
@@ -58,5 +61,4 @@ public class ExportFileStore {
         Files.deleteIfExists(temporaryPath(jobId));
     }
 
-    public static class ExportFileUnavailableException extends RuntimeException { }
 }

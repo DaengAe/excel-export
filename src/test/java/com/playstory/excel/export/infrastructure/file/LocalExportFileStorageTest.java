@@ -1,4 +1,4 @@
-package com.playstory.excel.job;
+package com.playstory.excel.export.infrastructure.file;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -10,13 +10,13 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-class ExportFileStoreTest {
+class LocalExportFileStorageTest {
     @TempDir
     Path directory;
 
     @Test
     void finalizedXlsxIsRecognizedAsDownloadable() throws Exception {
-        ExportFileStore store = new ExportFileStore(new ExportProperties(directory, 1000, 100, 10));
+        LocalExportFileStorage store = new LocalExportFileStorage(new ExportProperties(directory, 1000, 100, 10));
         store.ensureDirectories();
         UUID jobId = UUID.randomUUID();
         try (XSSFWorkbook workbook = new XSSFWorkbook(); var output = Files.newOutputStream(store.temporaryPath(jobId))) {

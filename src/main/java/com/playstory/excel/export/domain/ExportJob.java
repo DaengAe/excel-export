@@ -1,4 +1,4 @@
-package com.playstory.excel.job;
+package com.playstory.excel.export.domain;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;

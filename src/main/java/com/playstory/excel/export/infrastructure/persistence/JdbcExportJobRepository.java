@@ -1,4 +1,8 @@
-package com.playstory.excel.job;
+package com.playstory.excel.export.infrastructure.persistence;
+
+import com.playstory.excel.export.domain.ExportJob;
+import com.playstory.excel.export.domain.JobStatus;
+import com.playstory.excel.export.port.ExportJobStore;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -9,7 +13,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public class ExportJobRepository {
+public class JdbcExportJobRepository implements ExportJobStore {
     private final JdbcTemplate jdbcTemplate;
 
     private final RowMapper<ExportJob> mapper = (rs, rowNum) -> new ExportJob(
@@ -23,7 +27,7 @@ public class ExportJobRepository {
             rs.getString("error_code"),
             rs.getString("error_message"));
 
-    public ExportJobRepository(JdbcTemplate jdbcTemplate) { this.jdbcTemplate = jdbcTemplate; }
+    public JdbcExportJobRepository(JdbcTemplate jdbcTemplate) { this.jdbcTemplate = jdbcTemplate; }
 
     public ExportJob create() {
         UUID id = UUID.randomUUID();

@@ -1,4 +1,4 @@
-package com.playstory.excel.job;
+package com.playstory.excel.export.domain;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 

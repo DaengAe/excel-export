@@ -69,6 +69,31 @@ flowchart LR
 - `postgres`: 주문 데이터와 job 상태를 함께 저장한다.
 - `exports_data`: 생성 XLSX를 backend 재시작 뒤에도 유지한다.
 
+## 패키지 구조
+
+과제의 단일 `ExportJob` 도메인에 맞춰, 전체 계층을 과도하게 늘리지 않은 경량 Hexagonal 구조를 적용했습니다.
+
+```text
+com.playstory.excel
+├── config
+└── export
+    ├── domain
+    │   └── ExportJob, JobStatus
+    ├── application
+    │   └── ExportJobWorker              # 상태 전이·복구 흐름 조율
+    ├── port
+    │   ├── ExportJobStore               # job 상태 영속화 경계
+    │   ├── ExcelFileExporter            # XLSX 생성 경계
+    │   └── ExportFileStorage            # 파일 lifecycle 경계
+    ├── infrastructure
+    │   ├── persistence/JdbcExportJobRepository
+    │   └── file/JdbcStreamingExcelExporter, LocalExportFileStorage
+    └── presentation
+        └── ExportJobController, ApiExceptionHandler
+```
+
+`application`과 `presentation`은 port 인터페이스에만 의존합니다. 따라서 PostgreSQL/JDBC, Apache POI, 로컬 파일시스템은 `infrastructure`에서 교체 가능한 구현으로 격리했습니다. 다만 현재 도메인이 하나이고 adapter도 세 개뿐이므로, use case별 클래스를 과도하게 나누는 완전한 Hexagonal 구조보다 읽기 쉬운 범위를 우선했습니다.
+
 ## 핵심 흐름과 상태 전이
 
 ```text

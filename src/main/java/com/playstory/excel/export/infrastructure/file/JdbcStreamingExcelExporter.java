@@ -1,4 +1,6 @@
-package com.playstory.excel.job;
+package com.playstory.excel.export.infrastructure.file;
+
+import com.playstory.excel.export.port.ExcelFileExporter;
 
 import com.playstory.excel.config.ExportProperties;
 import java.io.IOException;
@@ -14,12 +16,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @Component
-public class ExcelExporter {
+public class JdbcStreamingExcelExporter implements ExcelFileExporter {
     private final JdbcTemplate jdbcTemplate;
     private final TransactionTemplate transactionTemplate;
     private final ExportProperties properties;
 
-    public ExcelExporter(JdbcTemplate jdbcTemplate, TransactionTemplate transactionTemplate, ExportProperties properties) {
+    public JdbcStreamingExcelExporter(JdbcTemplate jdbcTemplate, TransactionTemplate transactionTemplate, ExportProperties properties) {
         this.jdbcTemplate = jdbcTemplate;
         this.transactionTemplate = transactionTemplate;
         this.properties = properties;
