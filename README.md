@@ -1,13 +1,13 @@
 # 비동기 Excel Export
 
-Playstory 사전 과제입니다. 사용자가 엑셀 생성을 요청하면 즉시 응답하고, backend worker가 과제 명세의 주문 데이터 10만 건을 XLSX 파일로 생성합니다.
+Playstory 사전 과제를 구현한다. 사용자가 엑셀 생성을 요청하면 즉시 응답하고, backend worker가 과제 명세의 주문 데이터 10만 건을 XLSX 파일로 생성한다.
 
 ## 실행
 
 ### 요구 환경
 
 - Docker Desktop 또는 Docker Engine + Docker Compose v2
-- 외부 계정·외부 서비스는 필요하지 않음
+- 외부 계정·외부 서비스는 사용하지 않는다.
 
 ### 시작
 
@@ -15,14 +15,14 @@ Playstory 사전 과제입니다. 사용자가 엑셀 생성을 요청하면 즉
 docker compose up --build
 ```
 
-초기 실행에서는 PostgreSQL schema와 10만 건 시드를 Flyway migration으로 자동 생성합니다. 이후 브라우저에서 아래 주소로 접속합니다.
+초기 실행에서는 PostgreSQL schema와 10만 건 시드를 Flyway migration으로 자동 생성한다. 이후 브라우저에서 아래 주소로 접속한다.
 
 | 용도 | 주소 |
 |---|---|
 | **프론트엔드 화면** | [http://localhost:8088](http://localhost:8088) |
 | backend API | `http://localhost:8088/api/export-jobs` |
 
-화면에서 **새 엑셀 생성 요청** 버튼을 누르면 job이 생성되고 상태가 2초 간격으로 갱신됩니다. `done` 상태가 되면 다운로드 링크로 XLSX 파일을 받을 수 있습니다.
+화면에서 **새 엑셀 생성 요청** 버튼을 누르면 job을 생성하고 상태를 2초 간격으로 갱신한다. `done` 상태가 되면 다운로드 링크로 XLSX 파일을 내려받는다.
 
 ### 종료
 
@@ -30,21 +30,21 @@ docker compose up --build
 docker compose down
 ```
 
-이 명령은 컨테이너만 종료합니다. PostgreSQL과 생성 파일은 named volume에 남으므로 다음 실행에서도 유지됩니다.
+이 명령은 컨테이너만 종료한다. PostgreSQL과 생성 파일은 named volume에 남으므로 다음 실행에서도 유지한다.
 
 ## 과제 요구사항 대응
 
 | 요구사항 | 구현 |
 |---|---|
-| 즉시 응답·백그라운드 생성 | `POST /api/export-jobs`가 job을 저장한 뒤 `202 Accepted`를 반환하고, scheduler worker가 별도 흐름에서 처리 |
-| job 상태 | `pending / processing / done / failed`를 `export_jobs` 테이블에 영속화 |
-| 시작·완료 시각·파일 경로 | `requested_at`, `started_at`, `finished_at`, `logical_file_path` 저장 |
-| 10만 건 자동 시드 | Flyway migration에서 PostgreSQL `generate_series`로 생성 |
-| 컨테이너 로컬 파일 저장 | backend named volume의 `/app/exports`에 저장 |
-| 데이터 요청 목록 화면 | React 화면에서 job ID·요청/시작/완료 시각·상태·파일 경로·다운로드 제공 |
-| 단일 backend 컨테이너·고정 자원 | Compose의 backend에 CPU `0.5`, 메모리 `1G`, reservation CPU `0.25`, 메모리 `512M` 명시 |
+| 즉시 응답·백그라운드 생성 | `POST /api/export-jobs`가 job을 저장한 뒤 `202 Accepted`를 반환하고, scheduler worker가 별도 흐름에서 처리한다. |
+| job 상태 | `pending / processing / done / failed`를 `export_jobs` 테이블에 영속화한다. |
+| 시작·완료 시각·파일 경로 | `requested_at`, `started_at`, `finished_at`, `logical_file_path`를 저장한다. |
+| 10만 건 자동 시드 | Flyway migration에서 PostgreSQL `generate_series`로 생성한다. |
+| 컨테이너 로컬 파일 저장 | backend named volume의 `/app/exports`에 저장한다. |
+| 데이터 요청 목록 화면 | React 화면에서 job ID·요청/시작/완료 시각·상태·파일 경로·다운로드를 제공한다. |
+| 단일 backend 컨테이너·고정 자원 | Compose의 backend에 CPU `0.5`, 메모리 `1G`, reservation CPU `0.25`, 메모리 `512M`를 명시한다. |
 
-시드 테이블은 과제 명세의 `id`, `user_name`, `product_name`, `category`, `amount`, `status`, `order_date` 컬럼을 사용합니다.
+시드 테이블은 과제 명세의 `id`, `user_name`, `product_name`, `category`, `amount`, `status`, `order_date` 컬럼을 사용한다.
 
 ## 아키텍처
 
@@ -65,34 +65,9 @@ flowchart LR
 ```
 
 - `frontend`: React 결과물을 Nginx가 제공하고 `/api` 요청을 backend로 proxy한다.
-- `backend`: Spring Boot 단일 컨테이너다. API는 짧게 끝내고 worker가 파일 생성을 수행한다.
+- `backend`: Spring Boot 단일 컨테이너로 구성한다. API는 짧게 끝내고 worker가 파일 생성을 수행한다.
 - `postgres`: 주문 데이터와 job 상태를 함께 저장한다.
 - `exports_data`: 생성 XLSX를 backend 재시작 뒤에도 유지한다.
-
-## 패키지 구조
-
-과제의 단일 `ExportJob` 도메인에 맞춰, 전체 계층을 과도하게 늘리지 않은 경량 Hexagonal 구조를 적용했습니다.
-
-```text
-com.playstory.excel
-├── config
-└── export
-    ├── domain
-    │   └── ExportJob, JobStatus
-    ├── application
-    │   └── ExportJobWorker              # 상태 전이·복구 흐름 조율
-    ├── port
-    │   ├── ExportJobStore               # job 상태 영속화 경계
-    │   ├── ExcelFileExporter            # XLSX 생성 경계
-    │   └── ExportFileStorage            # 파일 lifecycle 경계
-    ├── infrastructure
-    │   ├── persistence/JdbcExportJobRepository
-    │   └── file/JdbcStreamingExcelExporter, LocalExportFileStorage
-    └── presentation
-        └── ExportJobController, ApiExceptionHandler
-```
-
-`application`과 `presentation`은 port 인터페이스에만 의존합니다. 따라서 PostgreSQL/JDBC, Apache POI, 로컬 파일시스템은 `infrastructure`에서 교체 가능한 구현으로 격리했습니다. 다만 현재 도메인이 하나이고 adapter도 세 개뿐이므로, use case별 클래스를 과도하게 나누는 완전한 Hexagonal 구조보다 읽기 쉬운 범위를 우선했습니다.
 
 ## 핵심 흐름과 상태 전이
 
@@ -106,7 +81,7 @@ POST 요청
   → DONE + logical file path 기록
 ```
 
-실패하면 `FAILED`와 오류 요약을 기록합니다. worker가 비정상 종료돼 `PROCESSING`에 남으면 lease 만료 후 `PENDING`으로 복구해 처음부터 다시 생성합니다. 파일 이동은 성공했지만 DB 완료 기록 전에 종료된 경우에는 다음 기동 시 최종 XLSX 파일을 검증해 `DONE`으로 보정합니다.
+실패하면 `FAILED`와 오류 요약을 기록한다. worker가 비정상 종료돼 `PROCESSING`에 남으면 lease 만료 후 `PENDING`으로 복구해 처음부터 다시 생성한다. 파일 이동은 성공했지만 DB 완료 기록 전에 종료된 경우에는 다음 기동 시 최종 XLSX 파일을 검증해 `DONE`으로 보정한다.
 
 ## 기술 선택과 트레이드오프
 
@@ -137,7 +112,7 @@ POST 요청
 
 ## 버전 고정
 
-Spring Boot parent는 `3.4.5`로 고정해 Spring framework·test starter의 호환 버전을 BOM으로 관리합니다. 직접 사용하는 라이브러리는 다음처럼 명시했습니다.
+Spring Boot parent는 `3.4.5`로 고정해 Spring framework·test starter의 호환 버전을 BOM으로 관리한다. 직접 사용하는 라이브러리는 다음처럼 명시한다.
 
 | 구성요소 | 버전 |
 |---|---|
@@ -151,7 +126,7 @@ Spring Boot parent는 `3.4.5`로 고정해 Spring framework·test starter의 호
 | Node build container | 24.17.0-alpine + digest |
 | Nginx | 1.27.5-alpine + digest |
 
-Docker base image에는 태그뿐 아니라 multi-architecture manifest digest도 함께 고정했습니다. 같은 Dockerfile이 시간에 따라 다른 이미지를 받지 않게 하기 위함입니다.
+Docker base image에는 태그뿐 아니라 multi-architecture manifest digest도 함께 고정한다. 같은 Dockerfile이 시간에 따라 다른 이미지를 받지 않게 한다.
 
 ## 검증 결과
 
@@ -159,15 +134,15 @@ Docker base image에는 태그뿐 아니라 multi-architecture manifest digest�
 
 <br>
 
-로컬 Docker Compose 환경에서 확인했습니다.
+로컬 Docker Compose 환경에서 확인한다.
 
-- backend Docker build 중 단위 테스트 통과
-- Flyway migration 2개와 주문 데이터 100,000건 생성 확인
-- API 요청은 `202 Accepted`로 즉시 응답
-- 완료된 4개 job의 `시작 시각 → 완료 시각` 기준 생성 시간은 **14초, 12초, 11초, 7초**, 평균 **11.0초**
-- 측정 조건: 단일 backend 컨테이너(CPU 0.5, 메모리 1GB), PostgreSQL·named volume을 포함한 로컬 Docker Compose 환경, 100,000행 XLSX 생성
-- 100,000행 생성 job이 `done`으로 전이하고 XLSX 다운로드 `200 OK` 확인
-- 내려받은 XLSX는 헤더 포함 **100,001행**, 파일 크기 **3,884,470 bytes**
+- backend Docker build 중 단위 테스트 통과를 확인한다.
+- Flyway migration 2개와 주문 데이터 100,000건 생성을 확인한다.
+- API 요청은 `202 Accepted`로 즉시 응답한다.
+- 완료된 4개 job의 `시작 시각 → 완료 시각` 기준 생성 시간은 **14초, 12초, 11초, 7초**이며 평균 **11.0초**를 기록한다.
+- 단일 backend 컨테이너(CPU 0.5, 메모리 1GB), PostgreSQL·named volume을 포함한 로컬 Docker Compose 환경에서 100,000행 XLSX를 생성한다.
+- 100,000행 생성 job이 `done`으로 전이하고 XLSX 다운로드가 `200 OK`로 응답함을 확인한다.
+- 내려받은 XLSX는 헤더 포함 **100,001행**이며 파일 크기는 **3,884,470 bytes**로 확인한다.
 
 ## 후속 개선 방향
 
