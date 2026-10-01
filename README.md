@@ -48,19 +48,20 @@ docker compose down
 
 ## 아키텍처
 
-```text
-Browser (React/Vite)
-       │  GET /api/export-jobs, POST /api/export-jobs
-       ▼
-Nginx ───────────────► Spring Boot backend (single container)
-                              │             │
-                              │             └─ fixedDelay worker: one job at a time
-                              ▼
-                         PostgreSQL ◄───────┘
-                         order_data / export_jobs
-                              │
-                              ▼
-                    named volume (/app/exports)
+```mermaid
+flowchart LR
+    Browser["Browser<br/>React/Vite"]
+    Nginx["Nginx<br/>static hosting + /api proxy"]
+    API["Spring Boot API<br/>single backend container"]
+    Worker["fixedDelay worker<br/>one job at a time"]
+    DB[("PostgreSQL<br/>order_data · export_jobs")]
+    Volume[("named volume<br/>/app/exports")]
+
+    Browser -->|"GET /api/export-jobs<br/>POST /api/export-jobs"| Nginx
+    Nginx --> API
+    API -->|"job INSERT · status query"| DB
+    Worker -->|"fixedDelay polling · claim job<br/>cursor streaming · status update"| DB
+    Worker -->|"write xlsx"| Volume
 ```
 
 - `frontend`: React 결과물을 Nginx가 제공하고 `/api` 요청을 backend로 proxy한다.
