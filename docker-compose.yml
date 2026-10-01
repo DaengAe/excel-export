@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: exportdb
+      POSTGRES_USER: export
+      POSTGRES_PASSWORD: export
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U export -d exportdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: .
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/exportdb
+      SPRING_DATASOURCE_USERNAME: export
+      SPRING_DATASOURCE_PASSWORD: export
+      EXPORT_DIRECTORY: /app/exports
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - exports_data:/app/exports
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "8088:80"
+
+volumes:
+  postgres_data:
+  exports_data:

@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/exportdb}
+    username: ${SPRING_DATASOURCE_USERNAME:export}
+    password: ${SPRING_DATASOURCE_PASSWORD:export}
+    hikari:
+      maximum-pool-size: 4
+      minimum-idle: 1
+      connection-timeout: 5000
+  flyway:
+    enabled: true
+  jackson:
+    default-property-inclusion: non_null
+server:
+  error:
+    include-message: never
+app:
+  export:
+    directory: ${EXPORT_DIRECTORY:/app/exports}
+    fetch-size: 1000
+    row-window-size: 100
+    lease-minutes: 10
+    worker-delay-ms: 1000
