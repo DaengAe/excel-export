@@ -7,7 +7,6 @@ import com.playstory.excel.export.port.ExportFileUnavailableException;
 import com.playstory.excel.export.port.ExportJobStore;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpHeaders;
@@ -33,12 +32,12 @@ public class ExportJobController {
     }
 
     @PostMapping
-    public ResponseEntity<ExportJob> create() {
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(jobStore.create());
+    public ResponseEntity<ExportJobResponse> create() {
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(ExportJobResponse.from(jobStore.create()));
     }
 
     @GetMapping
-    public List<ExportJob> list() { return jobStore.findLatest(50); }
+    public List<ExportJobResponse> list() { return jobStore.findLatest(50).stream().map(ExportJobResponse::from).toList(); }
 
     @GetMapping("/{id}/download")
     public ResponseEntity<FileSystemResource> download(@PathVariable UUID id) {
